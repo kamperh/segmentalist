@@ -7,7 +7,6 @@ Date: 2014-2016
 import logging
 import math
 import numpy as np
-import numpy.testing as npt
 import random
 import time
 

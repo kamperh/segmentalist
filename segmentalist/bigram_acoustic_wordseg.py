@@ -5,6 +5,10 @@ Date: 2016
 """
 
 import logging
+import math
+import numpy as np
+import random
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +162,30 @@ def main():
             vec_ids[i + cur_start] = i_embed
             # print cur_start, cur_end, i + cur_start, i_embed
             i_embed += 1
-    print vec_ids
+    logger.info("vec_ids: " + str(vec_ids))
+
+    embedding_mats = {}
+    vec_ids_dict = {}
+    seed_bounds_dict = {}
+    durations_dict = {}
+    landmarks_dict = {}
+    embedding_mats["test1"] = embedding_mat1
+    vec_ids_dict["test1"] = vec_ids
+    seed_bounds_dict["test1"] = [2]
+    landmarks_dict["test1"] = [1, 2, 3]
+    durations_dict["test1"] = [1, 2, 1, 3, 2, 1]
+    embedding_mats["test2"] = embedding_mat2
+    vec_ids_dict["test2"] = vec_ids
+    seed_bounds_dict["test2"] = [2]
+    landmarks_dict["test2"] = [1, 2, 3]
+    durations_dict["test2"] = [1, 2, 1, 3, 2, 1]
+
+    random.seed(1)
+    np.random.seed(1)
+
+    global i_debug_monitor
+    i_debug_monitor = 0
+
 
 if __name__ == "__main__":
     main()
