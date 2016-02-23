@@ -1,7 +1,7 @@
 """
 Author: Herman Kamper
 Contact: kamperh@gmail.com
-Date: 2014-2015
+Date: 2014-2016
 """
 
 import logging
