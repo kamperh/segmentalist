@@ -45,6 +45,9 @@ class GaussianComponentsFixedVar(object):
     K_max : int
         The maximum number of components. If this value is None, then K_max is
         set to N, the number of data vectors.
+    lm : e.g. BigramSmoothLM
+        If specified, this language model is tied to the components and if
+        a component is deleted, the counts of the language model is updated.
 
     Global attributes
     -----------------
@@ -74,7 +77,7 @@ class GaussianComponentsFixedVar(object):
         Counts for each of the K components.
     """
 
-    def __init__(self, X, prior, assignments=None, K_max=None):
+    def __init__(self, X, prior, assignments=None, K_max=None, lm=None):
 
         # Attributes from parameters
         self.X = X
@@ -86,6 +89,7 @@ class GaussianComponentsFixedVar(object):
             assert False, "To-do: remove this, always require `K_max`"
             K_max = self.N
         self.K_max = K_max
+        self.lm = lm
 
         # Initialize attributes
         self.mu_N_numerators = np.zeros((self.K_max, self.D), np.float)
@@ -185,6 +189,7 @@ class GaussianComponentsFixedVar(object):
 
     def del_component(self, k):
         """Remove the component `k`."""
+
         logger.debug("Deleting component " + str(k))
         self.K -= 1
         if k != self.K:
@@ -195,12 +200,25 @@ class GaussianComponentsFixedVar(object):
             self.precision_preds[k, :] = self.precision_preds[self.K, :]
             self.counts[k] = self.counts[self.K]
             self.assignments[np.where(self.assignments == self.K)] = k
+
+            # If language model is specified, update it's counts
+            if self.lm is not None:
+                self.lm.unigram_counts[k] = self.lm.unigram_counts[self.K] 
+                self.lm.bigram_counts[k, :] = self.lm.bigram_counts[self.K, :]
+                self.lm.bigram_counts[:, k] = self.lm.bigram_counts[:, self.K]
+        
         # Empty out stats for last component
         self.mu_N_numerators[self.K].fill(0.)
         self.precision_Ns[self.K, :].fill(0.)
         self.log_prod_precision_preds[self.K] = 0.
         self.precision_preds[self.K, :].fill(0.)
         self.counts[self.K] = 0
+
+        # If language model is specified, update it's counts
+        if self.lm is not None:
+            self.lm.unigram_counts[self.K] = 0
+            self.lm.bigram_counts[self.K, :].fill(0)
+            self.lm.bigram_counts[:, self.K].fill(0)
 
     # @profile
     def log_prior(self, i):

@@ -164,17 +164,6 @@ class UnigramAcousticWordseg(object):
             n_slices_max=n_slices_max, min_duration=min_duration
             )
 
-        # # Temp
-        # print [i for i in ids_to_utterance_labels if i.startswith("s3802b_034615-034761")]
-        # print ids_to_utterance_labels.index("s3802b_034615-034761")
-        # id = ids_to_utterance_labels.index("s3802b_034615-034761")
-        # print self.utterances.get_segmented_embeds_i(id)
-        # print [34615 + i for i in seed_boundaries[id]]
-        # # print seed_boundaries[511]
-        # print embeddings[95325], np.linalg.norm(embeddings[95325]), embeddings[95325].shape
-        # # # print landmarks[1006]
-        # assert False
-
         # Find all the embeddings that are in the initial segmentation
         init_embeds = []
         for i in range(self.utterances.D):
@@ -207,20 +196,6 @@ class UnigramAcousticWordseg(object):
                 am_K = max(self.seed_to_cluster.values()) + 1
             else:
                 assert am_K >= max(self.seed_to_cluster.values()) + 1
-
-            # # Temp
-            # labels = set()
-            # for utt in seed_assignments_dict:
-            #     labels.update(seed_assignments_dict[utt])
-            # print "len(seed_assignments_dict)", len(seed_assignments_dict)
-            # print len(labels)
-            # print list(labels)[:10]
-            # print i_utt
-            # print assignments.max()
-            # print len(set(assignments))
-            # # print set(assignments)
-            # # print set(range(assignments.max() + 1)).difference(set(assignments).difference([-1]))
-            # assert False
 
             # Initialize `acoustic_model`
             self.acoustic_model = am_class(
@@ -283,9 +258,6 @@ class UnigramAcousticWordseg(object):
         ------
         log_prob : float
         """
-
-        # # temp
-        # print i, self.ids_to_utterance_labels[i], str(self.get_unsup_transcript_i(i)),
 
         # Debug trace
         logger.debug("Gibbs sampling utterance: " + str(i))
