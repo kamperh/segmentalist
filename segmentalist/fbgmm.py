@@ -317,6 +317,8 @@ class FBGMM(object):
         record_dict["sample_time"] = []
         start_time = time.time()
         record_dict["log_marg"] = []
+        record_dict["log_prob_z"] = []
+        record_dict["log_prob_X_given_z"] = []
         record_dict["anneal_temp"] = []
         record_dict["components"] = []
 
@@ -397,6 +399,8 @@ class FBGMM(object):
             record_dict["sample_time"].append(time.time() - start_time)
             start_time = time.time()
             record_dict["log_marg"].append(self.log_marg())
+            record_dict["log_prob_z"].append(self.log_prob_z())
+            record_dict["log_prob_X_given_z"].append(self.log_prob_X_given_z())
             record_dict["anneal_temp"].append(anneal_temp)
             record_dict["components"].append(self.components.K)
 
@@ -439,6 +443,7 @@ class FBGMM(object):
         else:
             prob_z = np.exp(log_prob_z - logsumexp(log_prob_z))
         # prob_z = np.exp(log_prob_z - logsumexp(log_prob_z))
+        assert not np.isnan(np.sum(prob_z))
 
         # Sample the new component assignment for `X[i]`
         k = utils.draw(prob_z)

@@ -21,7 +21,7 @@ import unigram_acoustic_wordseg
 import utils
 
 logger = logging.getLogger(__name__)
-i_debug_monitor = 1  # 466  # the index of an utterance which is to be monitored
+i_debug_monitor = 57  # 466  # the index of an utterance which is to be monitored
 debug_gibbs_only = False  # only sample the debug utterance
 
 
@@ -186,35 +186,35 @@ class BigramAcousticWordseg(object):
         # Provide the initial acoustic model assignments and initialize the model accordingly
         assignments = -1*np.ones(N, dtype=int)
         if seed_assignments_dict is not None:
-            assert False
-            # # Use seed assignments if provided
-            # logger.info("Using seed assignments")
-            # self.seed_to_cluster = {}
-            # i_cluster = 0
-            # for i_utt, utt in enumerate(ids_to_utterance_labels):
-            #     utt_init_embeds = np.array(self.utterances.get_segmented_embeds_i(i_utt), dtype=int)
-            #     utt_init_assignments = np.array(seed_assignments_dict[utt][:])
-            #     utt_init_assignments = utt_init_assignments[np.where(utt_init_embeds != -1)]
-            #     utt_init_embeds = utt_init_embeds[np.where(utt_init_embeds != -1)]
-            #     for seed in utt_init_assignments:
-            #         if not seed in self.seed_to_cluster:
-            #             if isinstance(seed, (int, long)):
-            #                 self.seed_to_cluster[seed] = seed
-            #             else:
-            #                 self.seed_to_cluster[seed] = i_cluster
-            #                 i_cluster += 1
-            #     utt_init_assignments = [self.seed_to_cluster[i] for i in utt_init_assignments]
-            #     assignments[utt_init_embeds] = utt_init_assignments
-            # if am_K is None:
-            #     am_K = max(self.seed_to_cluster.values()) + 1
-            # else:
-            #     assert am_K >= max(self.seed_to_cluster.values()) + 1
 
-            # # Initialize `acoustic_model`
-            # self.acoustic_model = am_class(
-            #     embeddings, am_param_prior, am_alpha, am_K, assignments,
-            #     covariance_type=covariance_type, lms=lms
-            #     )                
+            # Use seed assignments if provided
+            logger.info("Using seed assignments")
+            self.seed_to_cluster = {}
+            i_cluster = 0
+            for i_utt, utt in enumerate(ids_to_utterance_labels):
+                utt_init_embeds = np.array(self.utterances.get_segmented_embeds_i(i_utt), dtype=int)
+                utt_init_assignments = np.array(seed_assignments_dict[utt][:])
+                utt_init_assignments = utt_init_assignments[np.where(utt_init_embeds != -1)]
+                utt_init_embeds = utt_init_embeds[np.where(utt_init_embeds != -1)]
+                for seed in utt_init_assignments:
+                    if not seed in self.seed_to_cluster:
+                        if isinstance(seed, (int, long)):
+                            self.seed_to_cluster[seed] = seed
+                        else:
+                            self.seed_to_cluster[seed] = i_cluster
+                            i_cluster += 1
+                utt_init_assignments = [self.seed_to_cluster[i] for i in utt_init_assignments]
+                assignments[utt_init_embeds] = utt_init_assignments
+            if am_K is None:
+                am_K = max(self.seed_to_cluster.values()) + 1
+            else:
+                assert am_K >= max(self.seed_to_cluster.values()) + 1
+
+            # Initialize `acoustic_model`
+            self.acoustic_model = BigramFBGMM(
+                embeddings, am_param_prior, am_K, assignments,
+                covariance_type=covariance_type, lms=lms, lm=self.lm
+                )           
 
         elif init_am_assignments == "rand":
 
@@ -288,14 +288,20 @@ class BigramAcousticWordseg(object):
         """
         Return the log marginal probability of component assignment P(z).
         """
+        lm_tmp = BigramSmoothLM(
+            intrp_lambda=self.lm.intrp_lambda, a=self.lm.a, b=self.lm.b,
+            K=self.lm.K
+            )
         log_prob_z = 0.
         for i_utt in xrange(self.utterances.D):
             j_prev = None
             for i_cur in self.get_unsup_transcript_i(i_utt):
                 if j_prev is not None:
-                    log_prob_z += np.log(self.lm.prob_i_given_j(i_cur, j_prev))
+                    log_prob_z += np.log(lm_tmp.prob_i_given_j(i_cur, j_prev))
+                    lm_tmp.bigram_counts[j_prev, i_cur] += 1
                 else:
-                    log_prob_z += np.log(self.lm.prob_i(i_cur))
+                    log_prob_z += np.log(lm_tmp.prob_i(i_cur))
+                lm_tmp.unigram_counts[i_cur] += 1
         return log_prob_z
 
     def log_marg(self):
@@ -320,7 +326,7 @@ class BigramAcousticWordseg(object):
         log_prob_z[self.acoustic_model.components.K:] += self.acoustic_model.components.log_prior(i_embed)
         return _cython_utils.logsumexp(log_prob_z)
 
-    def gibbs_sample_inside_loop_i_embed(self, i_embed, j_prev_assignment=None, anneal_temp=1):
+    def gibbs_sample_inside_loop_i_embed(self, i_embed, j_prev_assignment=None, anneal_temp=1, i_utt=None):
         """
         Perform the inside loop of Gibbs sampling for data vector `i_embed`.
         """
@@ -342,7 +348,9 @@ class BigramAcousticWordseg(object):
         # Scale with language model scaling factor
         log_prob_z *= self.lms
         # print log_prob_z
-        logger.debug("lms * log(P(z=i|z_prev=j)): " + str(log_prob_z))
+        if i_utt is not None and i_utt == i_debug_monitor:
+            logger.debug("lms * log(P(z=i|z_prev=j)): " + str(log_prob_z))
+            logger.debug("log(p(x|z=i)): " + str(self.acoustic_model.components.log_post_pred(i_embed)))
 
         # Bigram version of (24.23) in Murphy, p. 842
         log_prob_z[:self.acoustic_model.components.K] += self.acoustic_model.components.log_post_pred(i_embed)
@@ -354,8 +362,10 @@ class BigramAcousticWordseg(object):
             prob_z = np.exp(log_prob_z_anneal)
         else:
             prob_z = np.exp(log_prob_z - logsumexp(log_prob_z))
+        assert not np.isnan(np.sum(prob_z))
 
-        logger.debug("P(z=i|x): " + str(prob_z))
+        if i_utt is not None and i_utt == i_debug_monitor:
+            logger.debug("P(z=i|x): " + str(prob_z))
 
         # Sample the new component assignment for `X[i]`
         k = utils.draw(prob_z)
@@ -364,13 +374,9 @@ class BigramAcousticWordseg(object):
         if k > self.acoustic_model.components.K:
             k = self.acoustic_model.components.K
 
-        logger.debug("Adding item " + str(i_embed) + " to acoustic model component " + str(k))
+        if i_utt is not None and i_utt == i_debug_monitor:
+            logger.debug("Adding item " + str(i_embed) + " to acoustic model component " + str(k))
         self.acoustic_model.components.add_item(i_embed, k)
-
-        # # Update language model counts
-        # self.lm.unigram_counts[k] += 1
-        # if j_prev_assignment is not None:
-        #     self.lm.bigram_counts[j_prev_assignment, k] += 1
 
         return k
 
@@ -481,7 +487,7 @@ class BigramAcousticWordseg(object):
                 anneal_temp = 1
 
             j_prev_assignment = self.gibbs_sample_inside_loop_i_embed(
-                i_embed, j_prev_assignment, anneal_temp=anneal_temp
+                i_embed, j_prev_assignment, anneal_temp=anneal_temp, i_utt=i
                 )
 
         self.lm.counts_from_utterance(self.get_unsup_transcript_i(i))
@@ -536,8 +542,7 @@ class BigramAcousticWordseg(object):
             logger.debug("-"*39)
 
         if assignments_only:
-            # To-do: add correct scaled marginals here
-            assert False, "to-do"
+            # Segmentation is not performed, so frame-scaled marginals does not make gibbs_sample_inside_loop_i_embed
             return 0.
         else:
             return log_prob
@@ -655,6 +660,9 @@ class BigramAcousticWordseg(object):
             for key in sorted(record_dict):
                 info += ", " + key + ": " + str(record_dict[key][-1])
             logger.info(info)
+
+            logger.debug("Unigram counts after inference: " + str(self.lm.unigram_counts))
+            logger.debug("Bigram counts after inference: " + str(self.lm.bigram_counts))
 
         return record_dict
 

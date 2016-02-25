@@ -16,7 +16,7 @@ import _cython_utils
 # TIME_POWER_TERM = 1.6  # with 1.2 instead of 1, we get less words (prefer longer words)
 
 logger = logging.getLogger(__name__)
-i_debug_monitor = 1  # 466  # the index of an utterance which is to be monitored
+i_debug_monitor = 57  # 466  # the index of an utterance which is to be monitored
 debug_gibbs_only = False  # only sample the debug utterance
 
 
