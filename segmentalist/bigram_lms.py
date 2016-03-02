@@ -7,6 +7,7 @@ Date: 2016
 """
 
 import numpy as np
+import _cython_utils
 
 
 #-----------------------------------------------------------------------------#
@@ -47,17 +48,38 @@ class BigramSmoothLM(object):
 
     def prob_i(self, i):
         """The unigram probability of observing `i`."""
-        return 1.*(self.unigram_counts[i] + self.a/self.K)/(np.sum(self.unigram_counts) + self.a)
+        return (
+            (self.unigram_counts[i] + float(self.a)/self.K) / 
+            (_cython_utils.sum_ints(self.unigram_counts) + self.a)
+            )
 
     def prob_i_given_j(self, i, j):
         """The conditional bigram probability of observing `i` given `j`."""
         prob_i_ = self.prob_i(i)
-        prob_i_given_j_ = 1.*(self.bigram_counts[j, i] + self.b/self.K) / (self.unigram_counts[j] + self.b)
+        prob_i_given_j_ = (
+            (self.bigram_counts[j, i] + float(self.b)/self.K) / (self.unigram_counts[j] + float(self.b))
+            )
         return self.intrp_lambda * prob_i_ + (1 - self.intrp_lambda) * prob_i_given_j_
+
+    def log_prob_vec_i(self):
+        """Return a vector of the log unigram probabilities."""
+        return (
+            np.log(self.unigram_counts + float(self.a)/self.K)
+            - np.log(_cython_utils.sum_ints(self.unigram_counts) + self.a)
+            )
 
     def prob_vec_i(self):
         """Return a vector of the unigram probabilities."""
-        return 1.*(self.unigram_counts + self.a/self.K) / (np.sum(self.unigram_counts) + self.a)
+        return (
+            (self.unigram_counts + float(self.a)/self.K) /
+            (_cython_utils.sum_ints(self.unigram_counts) + self.a)
+            )
+
+    def log_prob_vec_given_j(self, j):
+        """
+        Return a vector of the log conditional bigram probabilities given `j`.
+        """
+        return np.log(self.prob_vec_given_j(j))
 
     def prob_vec_given_j(self, j):
         """
@@ -65,7 +87,7 @@ class BigramSmoothLM(object):
         """
         return (
             self.intrp_lambda * self.prob_vec_i() + (1 - self.intrp_lambda) *
-            (self.bigram_counts[j, :] + self.b/self.K) / (self.unigram_counts[j] + self.b)
+            (self.bigram_counts[j, :] + float(self.b)/self.K) / (self.unigram_counts[j] + float(self.b))
             )
 
     def counts_from_data(self, data):

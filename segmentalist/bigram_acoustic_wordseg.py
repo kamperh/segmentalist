@@ -4,7 +4,7 @@ Contact: kamperh@gmail.com
 Date: 2016
 """
 
-from scipy.misc import logsumexp
+# from scipy.misc import logsumexp
 import logging
 import math
 import numpy as np
@@ -282,7 +282,7 @@ class BigramAcousticWordseg(object):
             #     if j_prev is not None:
             #         self.lm.bigram_counts[j_prev, i_cur] += 1
             #     j_prev = i_cur
-        npt.assert_equal(self.acoustic_model.components.counts, self.lm.unigram_counts)
+        # npt.assert_equal(self.acoustic_model.components.counts, self.lm.unigram_counts)
 
     def log_prob_z(self):
         """
@@ -310,13 +310,14 @@ class BigramAcousticWordseg(object):
         log_prob_X_given_z = self.acoustic_model.log_prob_X_given_z()
         return log_prob_z + log_prob_X_given_z
 
+    # @profile
     def log_marg_i_embed_unigram(self, i_embed):
         """Return the unigram log marginal of the i'th data vector: p(x_i)"""
         assert i_embed != -1
 
         # Compute log probability of `X[i]` belonging to each component
         # (24.26) in Murphy, p. 843
-        log_prob_z = self.lms * np.log(self.lm.prob_vec_i())
+        log_prob_z = self.lms * self.lm.log_prob_vec_i()
 
         # (24.23) in Murphy, p. 842`
         log_prob_z[:self.acoustic_model.components.K] += self.acoustic_model.components.log_post_pred(
@@ -326,6 +327,7 @@ class BigramAcousticWordseg(object):
         log_prob_z[self.acoustic_model.components.K:] += self.acoustic_model.components.log_prior(i_embed)
         return _cython_utils.logsumexp(log_prob_z)
 
+    # @profile
     def gibbs_sample_inside_loop_i_embed(self, i_embed, j_prev_assignment=None, anneal_temp=1, i_utt=None):
         """
         Perform the inside loop of Gibbs sampling for data vector `i_embed`.
@@ -342,7 +344,7 @@ class BigramAcousticWordseg(object):
         if j_prev_assignment is not None:
             log_prob_z = np.log(self.lm.prob_vec_given_j(j_prev_assignment))
         else:
-            log_prob_z = np.log(self.lm.prob_vec_i())
+            log_prob_z = self.lm.log_prob_vec_i()
         # print log_prob_z
 
         # Scale with language model scaling factor
@@ -357,11 +359,11 @@ class BigramAcousticWordseg(object):
         # Empty (unactive) components
         log_prob_z[self.acoustic_model.components.K:] += self.acoustic_model.components.log_prior(i_embed)
         if anneal_temp != 1:
-            log_prob_z = log_prob_z - logsumexp(log_prob_z)
-            log_prob_z_anneal = 1./anneal_temp * log_prob_z - logsumexp(1./anneal_temp * log_prob_z)
+            log_prob_z = log_prob_z - _cython_utils.logsumexp(log_prob_z)
+            log_prob_z_anneal = 1./anneal_temp * log_prob_z - _cython_utils.logsumexp(1./anneal_temp * log_prob_z)
             prob_z = np.exp(log_prob_z_anneal)
         else:
-            prob_z = np.exp(log_prob_z - logsumexp(log_prob_z))
+            prob_z = np.exp(log_prob_z - _cython_utils.logsumexp(log_prob_z))
         assert not np.isnan(np.sum(prob_z))
 
         if i_utt is not None and i_utt == i_debug_monitor:
@@ -502,16 +504,16 @@ class BigramAcousticWordseg(object):
         # print self.acoustic_model.components.counts
         # print "bigram_counts", self.lm.bigram_counts
 
-        npt.assert_equal(self.acoustic_model.components.counts, self.lm.unigram_counts)
+        # npt.assert_equal(self.acoustic_model.components.counts, self.lm.unigram_counts)
 
-        import copy
-        lm = copy.copy(self.lm)
-        lm.unigram_counts.fill(0.0)
-        lm.bigram_counts.fill(0.0)
-        for i_utt in xrange(self.utterances.D):
-            lm.counts_from_utterance(self.get_unsup_transcript_i(i_utt))
-        npt.assert_equal(lm.unigram_counts, self.lm.unigram_counts)
-        npt.assert_equal(lm.bigram_counts, self.lm.bigram_counts)
+        # import copy
+        # lm = copy.copy(self.lm)
+        # lm.unigram_counts.fill(0.0)
+        # lm.bigram_counts.fill(0.0)
+        # for i_utt in xrange(self.utterances.D):
+        #     lm.counts_from_utterance(self.get_unsup_transcript_i(i_utt))
+        # npt.assert_equal(lm.unigram_counts, self.lm.unigram_counts)
+        # npt.assert_equal(lm.bigram_counts, self.lm.bigram_counts)
         # assert False
 
             # print self.lm.unigram_counts
@@ -666,6 +668,7 @@ class BigramAcousticWordseg(object):
 
         return record_dict
 
+    # @profile
     def get_vec_embed_log_probs_unigram(self, vec_ids, durations):
         """
         Return the unigram log marginal probs of the `vec_ids` embeddings,
