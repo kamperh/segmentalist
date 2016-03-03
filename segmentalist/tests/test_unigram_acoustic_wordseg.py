@@ -85,7 +85,7 @@ def test_simple_vec_embed_log_probs():
     vec_embed_log_probs = segmenter.get_vec_embed_log_probs(
         segmenter.utterances.vec_ids[0], segmenter.utterances.durations[0]
         )
-    expected_vec_embed_log_probs = np.array([17.64191118, 35.27798971, 17.64191119])
+    expected_vec_embed_log_probs = np.array([17.5548998, 35.103967, 17.5548998])
 
     npt.assert_almost_equal(vec_embed_log_probs, expected_vec_embed_log_probs)
 

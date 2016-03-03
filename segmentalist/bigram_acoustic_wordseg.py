@@ -21,7 +21,7 @@ import unigram_acoustic_wordseg
 import utils
 
 logger = logging.getLogger(__name__)
-i_debug_monitor = 57  # 466  # the index of an utterance which is to be monitored
+i_debug_monitor = 81  # 466  # the index of an utterance which is to be monitored
 debug_gibbs_only = False  # only sample the debug utterance
 
 
@@ -318,6 +318,7 @@ class BigramAcousticWordseg(object):
         # Compute log probability of `X[i]` belonging to each component
         # (24.26) in Murphy, p. 843
         log_prob_z = self.lms * self.lm.log_prob_vec_i()
+        # logger.info("log_prob_z: " + str(log_prob_z))
 
         # (24.23) in Murphy, p. 842`
         log_prob_z[:self.acoustic_model.components.K] += self.acoustic_model.components.log_post_pred(

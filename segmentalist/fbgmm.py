@@ -254,14 +254,21 @@ class FBGMM(object):
 
     # @profile
     def log_marg_i(self, i): #, lms=1.):
-        """Return the log marginal of the i'th data vector: p(x_i)"""
+        """
+        Return the log marginal of the i'th data vector: p(x_i)
+
+        Here it is assumed that x_i is not currently in the acoustic model,
+        so the -1 term used in the denominator in (24.26) in Murphy, p. 843
+        is dropped (since x_i is already not included in the counts).
+        """
         assert i != -1
 
         # Compute log probability of `X[i]` belonging to each component
         # (24.26) in Murphy, p. 843
         log_prob_z = self.lms * (
             np.log(float(self.alpha)/self.components.K_max + self.components.counts)
-            - np.log(_cython_utils.sum_ints(self.components.counts) + self.alpha - 1.)
+            # - np.log(_cython_utils.sum_ints(self.components.counts) + self.alpha - 1.)
+            - np.log(_cython_utils.sum_ints(self.components.counts) + self.alpha)
             )
         # log_prob_z = lms * (
         #     np.ones(self.components.K_max)*(
@@ -269,7 +276,7 @@ class FBGMM(object):
         #         - np.log(np.sum(self.components.counts) + self.alpha - 1.)
         #         )
         #     )
-
+        # logger.info("log_prob_z: " + str(log_prob_z))
 
         # (24.23) in Murphy, p. 842
         log_prob_z[:self.components.K] += self.components.log_post_pred(i)
