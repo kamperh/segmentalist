@@ -8,6 +8,8 @@ Perform unsupervised acoustic word segmentation using both unigram and
 specifically, only bigram cluster assignments are sampled, and only using a
 maximum likelihood bigram language model.
 
+If you use this code, please cite one of the references below.
+
 
 Dependencies
 ------------
@@ -24,15 +26,12 @@ References
 - H. Kamper, A. Jansen, and S. J. Goldwater, "A segmental framework for
   fully-unsupervised large-vocabulary speech recognition," *arXiv preprint
   arXiv:1606.06950*, 2016.
-  - H. Kamper, A. Jansen, and S. J. Goldwater, "Unsupervised word segmentation
+- H. Kamper, A. Jansen, and S. J. Goldwater, "Unsupervised word segmentation
   and lexicon discovery using acoustic word embeddings," *IEEE Trans. Audio,
   Speech, Language Process.*, vol. 24, no. 4, pp. 669-679, 2016.
 - H. Kamper, A. Jansen, and S. J. Goldwater, "Fully unsupervised
   small-vocabulary speech recognition using a segmental Bayesian model," in
   *Proc. Interspeech*, 2015.
-- H. Kamper, A. Jansen, S. King, and S. Goldwater, "Unsupervised lexical
-  clustering of speech segments using fixed-dimensional acoustic embeddings,"
-  in *Proc. SLT*, 2014.
 
 
 Contributors
