@@ -14,14 +14,17 @@ Dependencies
 - [Cython](http://cython.org/)
 
 
-Building the code
------------------
-Run `make`.
+Building and testing the code
+-----------------------------
+Run `make` to build the Cython components. Run `make test` to run unit tests.
 
 
 References
 ----------
-- H. Kamper, A. Jansen, and S. J. Goldwater, "Unsupervised word segmentation
+- H. Kamper, A. Jansen, and S. J. Goldwater, "A segmental framework for
+  fully-unsupervised large-vocabulary speech recognition," *arXiv preprint
+  arXiv:1606.06950*, 2016.
+  - H. Kamper, A. Jansen, and S. J. Goldwater, "Unsupervised word segmentation
   and lexicon discovery using acoustic word embeddings," *IEEE Trans. Audio,
   Speech, Language Process.*, vol. 24, no. 4, pp. 669-679, 2016.
 - H. Kamper, A. Jansen, and S. J. Goldwater, "Fully unsupervised
@@ -32,8 +35,8 @@ References
   in *Proc. SLT*, 2014.
 
 
-Collaborators
--------------
+Contributors
+------------
 - [Herman Kamper](http://www.kamperh.com/)
 - [Aren Jansen](http://www.clsp.jhu.edu/~ajansen/)
 - [Sharon Goldwater](http://homepages.inf.ed.ac.uk/sgwater/)
