@@ -8,7 +8,11 @@ Perform unsupervised acoustic word segmentation using both unigram and
 specifically, only bigram cluster assignments are sampled, and only using a
 maximum likelihood bigram language model.
 
-If you use this code, please cite one of the references below.
+If you use this code, please cite one of the references below. The code here
+relies on prior feature extraction and a number of preprocessed files for your
+corpus which is not illustrated here. See
+[bucktsong_segmentalist](https://github.com/kamperh/bucktsong_segmentalist/)
+for a complete recipe using this code.
 
 
 Dependencies
