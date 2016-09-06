@@ -536,6 +536,33 @@ class UnigramAcousticWordseg(object):
             self.acoustic_model.components.get_assignments(self.utterances.get_segmented_embeds_i(i))
             )
 
+    def get_log_margs_i(self, i):
+        """
+        Get the log marginals for the current segmentation of utterance `i`.
+
+        The segments from utterance `i` is removed and then added back in. This
+        function is used for monitoring and post-processing.
+        """
+
+        # Remove embeddings from utterance `i` from the `acoustic_model`
+        segmented_embeds = self.utterances.get_segmented_embeds_i(i)
+        assignments = self.acoustic_model.components.get_assignments(segmented_embeds)
+        for i_embed in segmented_embeds:
+            if i_embed == -1:
+                continue  # don't remove a non-embedding (would accidently remove the last embedding)
+            self.acoustic_model.components.del_item(i_embed)
+
+        log_margs = [
+            self.acoustic_model.log_marg_i(j) for j in
+            self.utterances.get_segmented_embeds_i(i) if j != -1
+            ]
+
+        # Add the embeddings back into the model
+        for embed, assignment in zip(segmented_embeds, assignments):
+            self.acoustic_model.components.add_item(embed, assignment)
+
+        return log_margs
+
 
 #-----------------------------------------------------------------------------#
 #                              UTILITY FUNCTIONS                              #
