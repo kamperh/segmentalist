@@ -101,10 +101,10 @@ class FBGMM(object):
         Parameters
         ----------
         X : NxD matrix or None
-            The data matrix. If None, then this it is assumed that the
-            `components` attribute has already been initialized and that this
-            function is called to reset the `components`; in this case the data
-            is taken from the previous initialization.
+            The data matrix. If None, then it is assumed that the `components`
+            attribute has already been initialized and that this function is
+            called to reset the `components`; in this case the data is taken
+            from the previous initialization.
         """
         if X is None:
             assert hasattr(self, "components")

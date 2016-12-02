@@ -25,6 +25,14 @@ Building and testing the code
 Run `make` to build the Cython components. Run `make test` to run unit tests.
 
 
+Examples
+--------
+An IPython notebook example of clustering is given in
+`examples/clustering_examples.ipynb`. This is just to illustrate some of the
+differences between FBGMM and k-means clustering, and no segmentation is
+performed on the generated toy data.
+
+
 References
 ----------
 - H. Kamper, A. Jansen, and S. J. Goldwater, "A segmental framework for

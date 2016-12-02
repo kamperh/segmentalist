@@ -60,7 +60,7 @@ class GaussianComponentsFixedVar(object):
 
     Component attributes
     --------------------
-    mu_N_numerators: KxD matrix
+    mu_N_numerators : KxD matrix
         The numerator of (30) in Murphy's bayesGauss notes, p.3 for each
         component.
     precision_Ns : KxD matrix
