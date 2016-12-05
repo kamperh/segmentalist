@@ -174,9 +174,6 @@ class KMeansComponents(object):
         means[:self.K] = self.mean_numerators[:self.K]/self.counts[:self.K, None]
         means[self.K:] = self.random_means[self.K:]
 
-
-
-
         # # Temp
         # active_means = self.mean_numerators[:self.K]/self.counts[:self.K, None]
         # means = np.zeros((self.K_max + 1, self.D))
@@ -188,7 +185,6 @@ class KMeansComponents(object):
         # means = self.random_means.copy()
         # means[:self.K] = active_means
 
-        
         # # Temp
         # if self.K < self.K_max:
         #     means = self.random_means
@@ -207,6 +203,14 @@ class KMeansComponents(object):
         #     # print "jip"
         # else:
         #     means = self.mean_numerators[:self.K]/self.counts[:self.K, None]
+
+        # # Temp 4
+        # deltas = means - self.X[i]
+        # neg_sqrd_norms = -(deltas*deltas).sum(axis=1)
+        # constant = -0.6
+        # neg_sqrd_norms[self.K:] = constant
+        # return neg_sqrd_norms
+        # assert False
 
         deltas = means - self.X[i]
         return -(deltas*deltas).sum(axis=1)  # equavalent to np.linalg.norm(deltas, axis=1)**2
