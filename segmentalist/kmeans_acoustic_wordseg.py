@@ -375,7 +375,6 @@ class SegmentalKMeansWordseg(object):
             + " (index=" + str(i_debug_monitor) + ")"
             )
 
-
         # Setup record dictionary
         record_dict = {}
         record_dict["sum_neg_sqrd_norm"] = []
