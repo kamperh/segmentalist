@@ -62,6 +62,7 @@ class KMeansComponents(object):
         # Initialize attributes
         self.mean_numerators = np.zeros((self.K_max, self.D), np.float)
         self.counts = np.zeros(self.K_max, np.int)
+        # self.means = np.zeros((self.K_max, self.D), np.float)
 
         # Check that assignments are valid
         self.K = 0
@@ -71,12 +72,14 @@ class KMeansComponents(object):
         assert set(assignments).difference([-1]) == set(range(assignments.max() + 1))
         self.assignments = -1*np.ones(self.N, dtype=np.int)
 
+        self.setup_random_means()
+        self.means = self.random_means.copy()
+
         # Add the data items
         for k in range(assignments.max() + 1):
             for i in np.where(assignments == k)[0]:
                 self.add_item(i, k)
 
-        self.setup_random_means()
         # Temp: used if no mean is assigned
         # This is wrong!! Make sure to pick point from valid X
         # replace = self.K_max < self.N
@@ -104,6 +107,7 @@ class KMeansComponents(object):
 
         self.mean_numerators[k, :] += self.X[i]
         self.counts[k] += 1
+        self.means[k, :] = self.mean_numerators[k, :] / self.counts[k]
         self.assignments[i] = k
 
     def del_item(self, i):
@@ -124,6 +128,8 @@ class KMeansComponents(object):
             self.counts[k] -= 1
             self.assignments[i] = -1
             self.mean_numerators[k, :] -= self.X[i]
+            if self.counts[k] != 0:
+                self.means[k, :] = self.mean_numerators[k, :] / self.counts[k]
 
             # # Temp 3
             # if no_empty and self.counts[k] == 0:
@@ -151,11 +157,13 @@ class KMeansComponents(object):
             # Put stats from last component into place of the one being removed
             self.mean_numerators[k] = self.mean_numerators[self.K]
             self.counts[k] = self.counts[self.K]
+            self.means[k, :] = self.mean_numerators[self.K, :] / self.counts[self.K]
             self.assignments[np.where(self.assignments == self.K)] = k
 
         # Empty out stats for last component
         self.mean_numerators[self.K].fill(0.)
         self.counts[self.K] = 0
+        self.means[self.K] = self.random_means[self.K]
 
     # @profile
     def neg_sqrd_norm(self, i):
@@ -170,9 +178,10 @@ class KMeansComponents(object):
         # means = self.random_means.copy()
         # means[:self.K] = self.mean_numerators[:self.K]/self.counts[:self.K, None]
 
-        means = np.zeros((self.K_max, self.D))
-        means[:self.K] = self.mean_numerators[:self.K]/self.counts[:self.K, None]
-        means[self.K:] = self.random_means[self.K:]
+        # means = np.zeros((self.K_max, self.D))
+        # means[:self.K] = self.mean_numerators[:self.K]/self.counts[:self.K, None]
+        # means[self.K:] = self.random_means[self.K:]
+        # assert np.all(means == self.means)
 
         # # Temp
         # active_means = self.mean_numerators[:self.K]/self.counts[:self.K, None]
@@ -212,7 +221,8 @@ class KMeansComponents(object):
         # return neg_sqrd_norms
         # assert False
 
-        deltas = means - self.X[i]
+        # deltas = means - self.X[i]
+        deltas = self.means - self.X[i]
         return -(deltas*deltas).sum(axis=1)  # equavalent to np.linalg.norm(deltas, axis=1)**2
 
     def max_neg_sqrd_norm_i(self, i):
