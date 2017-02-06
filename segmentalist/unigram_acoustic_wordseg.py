@@ -821,7 +821,7 @@ def forward_backward_viterbi(vec_embed_log_probs, log_p_continue, N,
     t = N
     log_prob = 0.
     while True:
-        i = 0.5*(t - 1)*t
+        i = int(0.5*(t - 1)*t)
         log_p_k = (
             vec_embed_log_probs[i:i + t][-n_slices_max:n_slices_min_cut] +
             log_alphas[:t][-n_slices_max:n_slices_min_cut]
