@@ -4,4 +4,5 @@
 !*.py
 !*.pyx
 !*.md
+!examples/clustering_examples.ipynb
 !Makefile
